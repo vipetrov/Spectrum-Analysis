@@ -121,7 +121,7 @@ class MyMainFrame : public TGMainFrame
   RQ_OBJECT("MyMainFrame")
 private:
   TGDoubleHSlider *fSlider0, *fSlider;
-  TGNumberEntry *fNumber, *fNumberEff, *fnGamma, *fBorderLength, *fHistBinCombined, *fNumberOfPeacks;
+  TGNumberEntry *fNumber, *fNumberEff, *fnGamma, *fBorderLength, *fHistBinCombined, *fNumberOfPeacks, *fMeasureTime;
   TGHorizontalFrame *Frame1, *Frame2, *Frame3;
   TGLabel *fLabelPosition, *fLabelWidth, *fLabelIntegral, *fLabel2, *fLabelB;
   TGraphErrors *fGraph, *fGraphEff;
@@ -345,6 +345,11 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
   fNumberOfPeacks->Connect("ValueSet(Int_t)", "MyMainFrame", this, "DoDraw()");
   (fNumberOfPeacks->GetNumberEntry())->Connect("ReturnPressed()", "MyMainFrame", this, "DoDraw()");
   fNumberOfPeacks->SetIntNumber(1);
+  TGLabel *fTextLabelMeasureTime = new TGLabel(Frame1, "   Time of Measurement (s):");
+  fMeasureTime = new TGNumberEntry(Frame1, 0, 10, 100, TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 1, 1e7);
+  fMeasureTime->Connect("ValueSet(Int_t)", "MyMainFrame", this, "DoDraw()");
+  (fMeasureTime->GetNumberEntry())->Connect("ReturnPressed()", "MyMainFrame", this, "DoDraw()");
+  fMeasureTime->SetIntNumber(1);
 
   TGTextButton *exit = new TGTextButton(Frame1, "&Exit", "gApplication->Terminate(0)");
 
@@ -357,6 +362,8 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
   Frame1->AddFrame(fBorderLength, fMyBarLayout);
   Frame1->AddFrame(fTextLabelNumberOfPeacks, new TGLayoutHints(kLHintsLeft, 0, 5, 8, 0));
   Frame1->AddFrame(fNumberOfPeacks, fMyBarLayout);
+  Frame1->AddFrame(fTextLabelMeasureTime, new TGLayoutHints(kLHintsLeft, 0, 5, 8, 0));
+  Frame1->AddFrame(fMeasureTime, fMyBarLayout);
   Frame1->AddFrame(exit, fMyBarLayout);
 
   TGLabel *fTextLabelEnergy = new TGLabel(Frame2, "Energy Calibration.       Insert Energy:");
@@ -836,6 +843,8 @@ void MyMainFrame::DoDraw()
     PeakPositionUncertancy.push_back(fitGaus->GetParameter(2) * 2.35);
     PeakIntegral.push_back(fitGaus->Integral(MinPos, MaxPos) / (EnergyNotChannel ? a : 1.));
     PeakIntegralUncertancy.push_back(TMath::Sqrt(PeakIntegral[0]));
+    PeakIntegral[0] /= fMeasureTime->GetNumberEntry()->GetNumber();
+    PeakIntegralUncertancy[0] /= fMeasureTime->GetNumberEntry()->GetNumber();
     if (Eff)
     {
       if (EffSliderFirstMoved)
@@ -908,6 +917,8 @@ void MyMainFrame::DoDraw()
       for (int j = 0; j < 3; j++)
         MultiplePeaksParams[j].erase(MultiplePeaksParams[j].begin() + ind);
 
+      PeakIntegral.back() /= fMeasureTime->GetNumberEntry()->GetNumber(); 
+      PeakIntegralUncertancy.back() /= fMeasureTime->GetNumberEntry()->GetNumber(); 
       if (Eff)
       {
         if (EffSliderFirstMoved)
