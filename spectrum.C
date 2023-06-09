@@ -987,7 +987,8 @@ void MyMainFrame::SaveCal()
   new TGFileDialog(gClient->GetRoot(), fMain, kFDSave, &fi);
   ofstream outfile(fi.fFilename);
   // ofstream outfile2("CalibrationWithFWHM.txt");
-  for (int i = 0; i < xArr.size(); i++)
+  int nCalPoints = xArr.size();
+  for (int i = 0; i < nCalPoints; i++)
   {
     int ind = min_element(xArr.begin(), xArr.end()) - xArr.begin();
     outfile << Form("%.2f", xArr[ind]) << " " << Form("%.2f", yArr[ind]) << " " << Form("%.2f", yerrArr[ind]) << endl;
